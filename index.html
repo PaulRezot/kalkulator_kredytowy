@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kalkulator kredytowy</title>
+
+  <!-- Chart.js – wersja UMD + defer -->
+  <script defer
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div>
+      <div class="left-col">
+        <h1>Kalkulator Kredytowy</h1>
+        <form id="loanForm">
+          <label>Kwota kredytu (PLN):
+            <input type="number" id="amount" value="450000" required />
+          </label>
+          <label>Oprocentowanie roczne (%):
+            <input type="number" id="interest" value="8" step="0.01" required />
+          </label>
+          <label>Okres spłaty (lata):
+            <input type="number" id="years" value="30" required />
+          </label>
+          <label>Typ rat:
+            <select id="rateType">
+              <option value="fixed">Stałe</option>
+              <option value="decreasing">Malejące</option>
+            </select>
+          </label>
+          <button type="submit">Oblicz</button>
+        </form>
+        <div id="results"></div>
+        <div id="scheduleNav"></div>
+        <canvas id="loanChart" class="chart" height="160"></canvas>
+      </div>
+      <div id="overpayCol">
+        <h2>Nadpłaty kredytu</h2>
+        <form id="overpayForm" autocomplete="off">
+          <label>Kwota nadpłaty:
+            <input type="number" id="overpayAmount" min="1" step="1" value="100" required />
+          </label>
+          <label>Typ nadpłaty:
+            <select id="overpayType">
+              <option value="once">Jednorazowa</option>
+              <option value="monthly" selected>Miesięczna</option>
+            </select>
+          </label>
+          <label>Sposób rozliczenia:
+            <select id="overpayMode">
+              <option value="shorten">Skróć okres kredytowania</option>
+              <option value="lower">Obniż ratę, okres bez zmian</option>
+            </select>
+          </label>
+          <fieldset style="margin-top:18px;">
+            <legend>Dodatkowe wpłaty</legend>
+            <div id="extraPaymentsList"></div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="number" id="extraAmount" min="1" step="1" placeholder="Kwota" style="flex:1;" />
+              <select id="extraMonthSelect" style="flex:1;"></select>
+              <select id="extraYearSelect" style="flex:1;"></select>
+              <button type="button" id="addExtraBtn">Dodaj</button>
+            </div>
+          </fieldset>
+          <button type="submit" style="margin-top:18px;width:100%;">Oblicz z nadpłatami</button>
+        </form>
+        <div id="overpaySummary" style="margin-top:24px;"></div>
+        <div id="overpaySchedule" style="margin-top:18px;"></div>
+        <canvas id="overpayChart" class="chart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- nasz kod – defer, więc wykona się po Chart.js i po wyrenderowaniu DOM -->
+  <script defer src="script.js"></script>
+</body>
+</html>
