@@ -18,7 +18,7 @@
         <h1>Kalkulator Kredytowy</h1>
         <form id="loanForm">
           <label>Kwota kredytu (PLN):
-            <input type="number" id="amount" value="550000" required />
+            <input type="number" id="amount" value="500000" required />
           </label>
           <label>Oprocentowanie roczne (%):
             <input type="number" id="interest" value="8" step="0.01" required />
@@ -42,7 +42,7 @@
         <h2>Nadpłaty kredytu</h2>
         <form id="overpayForm" autocomplete="off">
           <label>Kwota nadpłaty:
-            <input type="number" id="overpayAmount" min="1" step="1" value="100" required />
+            <input type="number" id="overpayAmount" min="0" step="50" value="100" required />
           </label>
           <label>Typ nadpłaty:
             <select id="overpayType">
@@ -71,6 +71,73 @@
         <div id="overpaySummary" style="margin-top:24px;"></div>
         <div id="overpaySchedule" style="margin-top:18px;"></div>
         <canvas id="overpayChart" class="chart" height="160"></canvas>
+      </div>
+    </div>
+    
+    <!-- Kalkulator refinansowania -->
+    <div id="refinancingCol">
+      <div class="refinancing-grid">
+        <h2 class="refinancing-header">Kalkulator Refinansowania</h2>
+        <form id="refinancingForm" class="refinancing-form-grid">
+          <div class="refinancing-cols">
+            <div class="refinancing-box">
+              <h3>Obecny kredyt</h3>
+              <label>Pozostała kwota kredytu (PLN):
+                <input type="number" id="currentAmount" value="400000" required />
+              </label>
+              <label>Pozostały okres spłaty (lata):
+                <input type="number" id="currentYears" value="25" required />
+              </label>
+              <label>Typ oprocentowania:
+                <select id="currentRateType">
+                  <option value="fixed">Stałe</option>
+                  <option value="variable">Zmienne (WIBOR + marża)</option>
+                </select>
+              </label>
+              <label>Oprocentowanie roczne (%):
+                <input type="number" id="currentInterest" value="8.5" step="0.01" required />
+              </label>
+              <div id="variableRateSection" style="display: none;">
+                <label>Marża (%):
+                  <input type="number" id="currentMargin" value="2.5" step="0.01" />
+                </label>
+                <label>WIBOR (%):
+                  <input type="number" id="currentWibor" value="6.0" step="0.01" />
+                </label>
+              </div>
+              <label>Typ rat:
+                <select id="currentRateType2">
+                  <option value="fixed">Stałe</option>
+                  <option value="decreasing">Malejące</option>
+                </select>
+              </label>
+            </div>
+            <div class="refinancing-box">
+              <h3>Nowy kredyt</h3>
+              <label>Oprocentowanie roczne po refinansowaniu (%):
+                <input type="number" id="newInterest" value="7.0" step="0.01" required />
+              </label>
+              <label>Sposób refinansowania:
+                <select id="refinancingMode">
+                  <option value="lower">Obniż ratę, okres bez zmian</option>
+                  <option value="shorten">Skróć okres, rata bez zmian</option>
+                </select>
+              </label>
+              <label>Typ rat:
+                <select id="newRateType">
+                  <option value="fixed">Stałe</option>
+                  <option value="decreasing">Malejące</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="refinancing-submit">Oblicz korzyści refinansowania</button>
+        </form>
+        <div id="refinancingResults"></div>
+        <div id="refinancingComparison"></div>
+        <div id="refinancingChartWrap">
+          <canvas id="refinancingChart" class="chart" height="160"></canvas>
+        </div>
       </div>
     </div>
   </div>

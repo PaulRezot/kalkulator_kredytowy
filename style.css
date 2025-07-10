@@ -35,6 +35,165 @@ body{
   /* display: block; */
 }
 
+/* ===== Kalkulator refinansowania ===== */
+#refinancingCol {
+  width: 100%;
+  background: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(0,0,0,.1);
+  margin-top: 40px;
+}
+
+#refinancingCol h2 {
+  margin-top: 0;
+  color: #0043a8;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+}
+
+/* ===== Grid layout refinansowania ===== */
+#refinancingCol h2,
+.refinancing-header {
+  grid-area: unset;
+  text-align: center;
+  margin-bottom: 32px;
+  color: #0043a8;
+  font-size: 1.7em;
+  font-weight: 700;
+}
+
+.refinancing-grid {
+  display: grid;
+  grid-template-rows: auto auto auto auto auto;
+  grid-row-gap: 0;
+}
+
+.refinancing-box[style*="grid-area: current"],
+.refinancing-box[style*="grid-area: new"] {
+  background: #f8f9ff;
+  padding: 24px 20px 20px 20px;
+  border-radius: 12px;
+  border: 1px solid #e0e7f7;
+  min-width: 0;
+}
+
+.refinancing-header {
+  text-align: center;
+  margin-bottom: 32px;
+  color: #0043a8;
+  font-size: 1.7em;
+  font-weight: 700;
+}
+
+.refinancing-row-cols {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.refinancing-cols {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  justify-content: center;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  flex-wrap: nowrap;
+}
+
+.refinancing-box {
+  background: #f8f9ff;
+  padding: 24px 20px 20px 20px;
+  border-radius: 12px;
+  border: 1px solid #e0e7f7;
+  min-width: 0;
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1 1 340px;
+}
+
+.refinancing-submit {
+  display: block;
+  margin: 0 auto 0 auto;
+  width: 320px;
+  max-width: 100%;
+  padding: 14px 0;
+  font-size: 1.15em;
+  background: #0057d9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background .2s;
+}
+.refinancing-submit:hover:not(:disabled) {
+  background: #0043a8;
+}
+
+#refinancingResults,
+#refinancingComparison,
+#refinancingChartWrap {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+#refinancingChartWrap {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .refinancing-grid {
+    grid-template-areas:
+      "current"
+      "new";
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .refinancing-submit {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+  .refinancing-row-cols {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .refinancing-cols {
+    flex-direction: column;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+}
+
+.refinancing-section {
+  background: #f8f9ff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e7f7;
+}
+
+.refinancing-section h3 {
+  margin-top: 0;
+  color: #0043a8;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+}
+
+#variableRateSection {
+  background: #f0f4ff;
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border: 1px solid #d0e0ff;
+}
+
 /* ===== Formularz ===== */
 label{display:block;margin-top:14px}
 input,select{
@@ -162,6 +321,45 @@ th{text-align:center;background:#fafafa;font-weight:600}
 #overpaySchedule .table-wrap {
   margin-top: 0;
 }
+
+/* ===== Style dla wyników refinansowania ===== */
+#refinancingResults ul {
+  margin: 0 0 0 18px;
+  padding: 0;
+  font-size: 1.05em;
+}
+#refinancingResults li {
+  margin-bottom: 6px;
+}
+.comparison-table {
+  margin-top: 20px;
+}
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.comparison-table th,
+.comparison-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+.comparison-table th {
+  background: #f0f4ff;
+  font-weight: 600;
+  color: #0043a8;
+}
+.comparison-table .current {
+  background: #fff5f5;
+}
+.comparison-table .new {
+  background: #f0fff0;
+}
+.comparison-table .savings {
+  background: #fff8e0;
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .container > div {
     flex-direction: column !important;
@@ -171,6 +369,9 @@ th{text-align:center;background:#fafafa;font-weight:600}
     margin: 0 0 24px 0;
     min-width: 0;
     width: 100%;
+  }
+  #refinancingCol {
+    margin-top: 20px;
   }
 }
 #toggleOverpayLabel {

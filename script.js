@@ -526,4 +526,310 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  // ===== KALKULATOR REFINANSOWANIA =====
+  const refinancingForm = document.getElementById('refinancingForm');
+  const refinancingResults = document.getElementById('refinancingResults');
+  const refinancingComparison = document.getElementById('refinancingComparison');
+  const refinancingChartEl = document.getElementById('refinancingChart');
+  let refinancingChart = null;
+
+  // Obsługa sekcji zmiennego oprocentowania
+  const currentRateType = document.getElementById('currentRateType');
+  const variableRateSection = document.getElementById('variableRateSection');
+  const currentInterest = document.getElementById('currentInterest');
+  const currentMargin = document.getElementById('currentMargin');
+  const currentWibor = document.getElementById('currentWibor');
+
+  currentRateType.addEventListener('change', () => {
+    if (currentRateType.value === 'variable') {
+      variableRateSection.style.display = 'block';
+      currentInterest.disabled = true;
+      currentInterest.value = (+currentMargin.value + +currentWibor.value).toFixed(2);
+    } else {
+      variableRateSection.style.display = 'none';
+      currentInterest.disabled = false;
+    }
+  });
+
+  currentMargin.addEventListener('input', () => {
+    if (currentRateType.value === 'variable') {
+      currentInterest.value = (+currentMargin.value + +currentWibor.value).toFixed(2);
+    }
+  });
+
+  currentWibor.addEventListener('input', () => {
+    if (currentRateType.value === 'variable') {
+      currentInterest.value = (+currentMargin.value + +currentWibor.value).toFixed(2);
+    }
+  });
+
+  // Funkcja do obliczania harmonogramu kredytu
+  function calculateLoanSchedule(amount, years, interestRate, type) {
+    const n = years * 12;
+    const r = interestRate / 100 / 12;
+    const rows = [];
+    let saldo = amount;
+    let odsetkiCum = 0;
+
+    if (type === 'fixed') {
+      const R = amount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+      
+      for (let i = 0; i < n; i++) {
+        const odsetki = saldo * r;
+        const kapitał = R - odsetki;
+        saldo = Math.max(0, saldo - kapitał);
+        odsetkiCum += odsetki;
+        
+        rows.push([i+1, R, kapitał, odsetki, saldo]);
+      }
+    } else {
+      const kapStały = amount / n;
+      
+      for (let i = 0; i < n; i++) {
+        const odsetki = saldo * r;
+        const R = kapStały + odsetki;
+        saldo = Math.max(0, saldo - kapStały);
+        odsetkiCum += odsetki;
+        
+        rows.push([i+1, R, kapStały, odsetki, saldo]);
+      }
+    }
+
+    return {
+      rows,
+      totalInterest: odsetkiCum,
+      totalToPay: amount + odsetkiCum,
+      avgPayment: rows.reduce((sum, row) => sum + row[1], 0) / rows.length
+    };
+  }
+
+  // Funkcja do obliczania nowego harmonogramu po refinansowaniu
+  function calculateRefinancingSchedule(currentAmount, currentYears, newInterestRate, newType, refinancingMode) {
+    const n = currentYears * 12;
+    const r = newInterestRate / 100 / 12;
+    const rows = [];
+    let saldo = currentAmount;
+    let odsetkiCum = 0;
+
+    if (refinancingMode === 'lower') {
+      // Obniż ratę, okres bez zmian
+      if (newType === 'fixed') {
+        const R = currentAmount * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+        
+        for (let i = 0; i < n; i++) {
+          const odsetki = saldo * r;
+          const kapitał = R - odsetki;
+          saldo = Math.max(0, saldo - kapitał);
+          odsetkiCum += odsetki;
+          
+          rows.push([i+1, R, kapitał, odsetki, saldo]);
+        }
+      } else {
+        const kapStały = currentAmount / n;
+        
+        for (let i = 0; i < n; i++) {
+          const odsetki = saldo * r;
+          const R = kapStały + odsetki;
+          saldo = Math.max(0, saldo - kapStały);
+          odsetkiCum += odsetki;
+          
+          rows.push([i+1, R, kapStały, odsetki, saldo]);
+        }
+      }
+    } else {
+      // Skróć okres, rata bez zmian
+      // Najpierw oblicz średnią ratę z obecnego kredytu
+      const currentSchedule = calculateLoanSchedule(currentAmount, currentYears, 
+        +currentInterest.value, currentRateType.value);
+      const avgCurrentPayment = currentSchedule.avgPayment;
+      
+      // Oblicz nowy okres przy tej samej racie
+      let newN = 0;
+      if (newType === 'fixed') {
+        // Dla rat stałych - oblicz okres przy tej samej racie
+        const monthlyRate = r;
+        const payment = avgCurrentPayment;
+        const principal = currentAmount;
+        
+        // Użyj wzoru na okres kredytu
+        newN = Math.log(payment / (payment - principal * monthlyRate)) / Math.log(1 + monthlyRate);
+        newN = Math.ceil(newN);
+      } else {
+        // Dla rat malejących - oblicz okres przy tej samej części kapitałowej
+        const kapStały = currentAmount / currentYears / 12;
+        newN = Math.ceil(currentAmount / kapStały);
+      }
+      
+      // Oblicz harmonogram z nowym okresem
+      if (newType === 'fixed') {
+        const R = avgCurrentPayment;
+        
+        for (let i = 0; i < newN; i++) {
+          const odsetki = saldo * r;
+          const kapitał = R - odsetki;
+          saldo = Math.max(0, saldo - kapitał);
+          odsetkiCum += odsetki;
+          
+          rows.push([i+1, R, kapitał, odsetki, saldo]);
+          
+          if (saldo <= 0.01) break;
+        }
+      } else {
+        const kapStały = currentAmount / newN;
+        
+        for (let i = 0; i < newN; i++) {
+          const odsetki = saldo * r;
+          const R = kapStały + odsetki;
+          saldo = Math.max(0, saldo - kapStały);
+          odsetkiCum += odsetki;
+          
+          rows.push([i+1, R, kapStały, odsetki, saldo]);
+          
+          if (saldo <= 0.01) break;
+        }
+      }
+    }
+
+    return {
+      rows,
+      totalInterest: odsetkiCum,
+      totalToPay: currentAmount + odsetkiCum,
+      avgPayment: rows.reduce((sum, row) => sum + row[1], 0) / rows.length,
+      newPeriod: rows.length
+    };
+  }
+
+  refinancingForm.addEventListener('submit', e => {
+    e.preventDefault();
+
+    // Pobierz dane obecnego kredytu
+    const currentAmount = +refinancingForm.querySelector('#currentAmount').value;
+    const currentYears = +refinancingForm.querySelector('#currentYears').value;
+    const currentRateType2 = refinancingForm.querySelector('#currentRateType2').value;
+    const currentInterestRate = +refinancingForm.querySelector('#currentInterest').value;
+    const newInterestRate = +refinancingForm.querySelector('#newInterest').value;
+    const newType = refinancingForm.querySelector('#newRateType').value;
+    const refinancingMode = refinancingForm.querySelector('#refinancingMode').value;
+
+    // Oblicz obecny harmonogram
+    const currentSchedule = calculateLoanSchedule(currentAmount, currentYears, currentInterestRate, currentRateType2);
+    
+    // Oblicz nowy harmonogram
+    const newSchedule = calculateRefinancingSchedule(currentAmount, currentYears, newInterestRate, newType, refinancingMode);
+
+    // Oblicz korzyści
+    const interestSavings = currentSchedule.totalInterest - newSchedule.totalInterest;
+    const interestSavingsPct = (interestSavings / currentSchedule.totalInterest) * 100;
+    const paymentSavings = currentSchedule.avgPayment - newSchedule.avgPayment;
+    const periodSavings = refinancingMode === 'shorten' ? currentYears * 12 - newSchedule.newPeriod : 0;
+
+    // Wyświetl wyniki
+    refinancingResults.innerHTML = `
+      <h3>Korzyści z refinansowania</h3>
+      <ul>
+        <li><strong>Zaoszczędzone odsetki:</strong> ${interestSavings.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł (${interestSavingsPct.toFixed(2)}%)</li>
+        <li><strong>Obniżenie średniej raty:</strong> ${paymentSavings.toFixed(2)} zł</li>
+        ${refinancingMode === 'shorten' ? `<li><strong>Skrócenie okresu o:</strong> ${periodSavings} rat (${Math.floor(periodSavings/12)} lat, ${periodSavings%12} mies.)</li>` : ''}
+        <li><strong>Nowa średnia rata:</strong> ${newSchedule.avgPayment.toFixed(2)} zł</li>
+        <li><strong>Nowy okres spłaty:</strong> ${Math.floor(newSchedule.newPeriod/12)} lat, ${newSchedule.newPeriod%12} miesięcy</li>
+      </ul>
+    `;
+
+    // Tabela porównawcza
+    refinancingComparison.innerHTML = `
+      <div class="comparison-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Parametr</th>
+              <th>Obecny kredyt</th>
+              <th>Po refinansowaniu</th>
+              <th>Korzyść</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="current">
+              <td>Oprocentowanie</td>
+              <td>${currentInterestRate.toFixed(2)}%</td>
+              <td>${newInterestRate.toFixed(2)}%</td>
+              <td class="savings">-${(currentInterestRate - newInterestRate).toFixed(2)} pkt. proc.</td>
+            </tr>
+            <tr class="new">
+              <td>Średnia rata</td>
+              <td>${currentSchedule.avgPayment.toFixed(2)} zł</td>
+              <td>${newSchedule.avgPayment.toFixed(2)} zł</td>
+              <td class="savings">-${paymentSavings.toFixed(2)} zł</td>
+            </tr>
+            <tr class="current">
+              <td>Łączne odsetki</td>
+              <td>${currentSchedule.totalInterest.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł</td>
+              <td>${newSchedule.totalInterest.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł</td>
+              <td class="savings">-${interestSavings.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł</td>
+            </tr>
+            <tr class="new">
+              <td>Okres spłaty</td>
+              <td>${currentYears} lat</td>
+              <td>${Math.floor(newSchedule.newPeriod/12)} lat, ${newSchedule.newPeriod%12} mies.</td>
+              <td class="savings">${refinancingMode === 'shorten' ? `-${Math.floor(periodSavings/12)} lat, -${periodSavings%12} mies.` : 'Bez zmian'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Wykres porównawczy
+    if (refinancingChart) refinancingChart.destroy();
+
+    const labels = ['Odsetki', 'Kapitał'];
+    const currentData = [currentSchedule.totalInterest, currentAmount];
+    const newData = [newSchedule.totalInterest, currentAmount];
+
+    refinancingChart = new Chart(refinancingChartEl.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Obecny kredyt',
+            data: currentData,
+            backgroundColor: '#ff6b6b',
+            stack: 'current'
+          },
+          {
+            label: 'Po refinansowaniu',
+            data: newData,
+            backgroundColor: '#4ecdc4',
+            stack: 'new'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          title: {
+            display: true,
+            text: 'Porównanie kosztów kredytu'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pl-PL') + ' zł';
+              }
+            }
+          }
+        }
+      }
+    });
+  });
 });
